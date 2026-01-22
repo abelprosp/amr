@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050505;
+  --foreground: #ffffff;
+  --card-bg: #111111;
+  --text-muted: #888888;
+  --accent-color: #1a1a1a;
+  --active-tab-bg: #222222;
+  --border-color: #333;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Utilitários personalizados se necessário */
+.tab-content {
+  display: none;
+  height: 100%;
+  width: 100%;
+  animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0.9; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+iframe {
+  border: none;
+  width: 100%;
+  height: 100%;
+}

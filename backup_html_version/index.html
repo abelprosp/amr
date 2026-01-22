@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA Visor Integrado</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header / Navegação -->
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-brain"></i> IA Visor Integrado
+        </div>
+        
+        <nav class="nav-tabs">
+            <button class="tab-btn active" onclick="openTab('dashboard')">Dashboard</button>
+            <button class="tab-btn" onclick="openTab('bluemilk')">IA BlueMilk</button>
+            <button class="tab-btn" onclick="openTab('usoulimpou')">IA UsouLimpou</button>
+        </nav>
+
+        <div class="user-controls">
+            <button class="icon-btn"><i class="fa-solid fa-moon"></i></button>
+            <button class="profile-btn">Redobrai</button>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main>
+        <!-- Tela 1: Dashboard -->
+        <section id="dashboard" class="tab-content active">
+            <h2>Dashboard</h2>
+            <div class="dashboard-placeholder">
+                <div class="empty-state">
+                    <p>Dashboard em andamento...</p>
+                    <small>Configure os widgets nas Configurações</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tela 2: IA BlueMilk -->
+        <section id="bluemilk" class="tab-content">
+            <div class="iframe-container">
+                <iframe 
+                    src="https://app.gptmaker.ai/widget/3ED9B41F212FF3B0AB29EE45785CCB51/iframe" 
+                    width="100%" 
+                    style="height: 100%; border: none;" 
+                    allow="microphone;">
+                </iframe>
+            </div>
+        </section>
+
+        <!-- Tela 3: IA UsouLimpou -->
+        <section id="usoulimpou" class="tab-content">
+            <div class="iframe-container">
+                <iframe 
+                    src="https://app.gptmaker.ai/widget/3ED9B439BC19B10D4A241AC4C59CD28F/iframe" 
+                    width="100%" 
+                    style="height: 100%; border: none;" 
+                    allow="microphone;">
+                </iframe>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
