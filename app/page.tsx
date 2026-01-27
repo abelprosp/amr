@@ -1,9 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import TreinamentoTab from './components/TreinamentoTab';
+import { CHAT_CONFIG } from './lib/chats';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  const tabClass = (tab: string) =>
+    `px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
+      activeTab === tab
+        ? 'bg-[var(--active-tab-bg)] text-[var(--foreground)] shadow-sm'
+        : 'text-[var(--text-muted)] hover:text-[var(--foreground)] bg-transparent'
+    }`;
 
   return (
     <>
@@ -13,37 +23,43 @@ export default function Home() {
           <i className="fa-solid fa-brain"></i> IA Visor Integrado
         </div>
 
-        <nav className="flex gap-1 bg-[#0f0f0f] p-1 rounded-lg border border-[#222]">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
-              activeTab === 'dashboard'
-                ? 'bg-[var(--active-tab-bg)] text-[var(--foreground)] shadow-sm'
-                : 'text-[var(--text-muted)] hover:text-[var(--foreground)] bg-transparent'
-            }`}
-          >
+        <nav className="flex flex-wrap gap-1 bg-[#0f0f0f] p-1 rounded-lg border border-[#222]">
+          <button onClick={() => setActiveTab('dashboard')} className={tabClass('dashboard')}>
             Dashboard
           </button>
-          <button
-            onClick={() => setActiveTab('bluemilk')}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
-              activeTab === 'bluemilk'
-                ? 'bg-[var(--active-tab-bg)] text-[var(--foreground)] shadow-sm'
-                : 'text-[var(--text-muted)] hover:text-[var(--foreground)] bg-transparent'
-            }`}
-          >
+          <button onClick={() => setActiveTab('bluemilk')} className={tabClass('bluemilk')}>
             IA BlueMilk
           </button>
-          <button
-            onClick={() => setActiveTab('usoulimpou')}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
-              activeTab === 'usoulimpou'
-                ? 'bg-[var(--active-tab-bg)] text-[var(--foreground)] shadow-sm'
-                : 'text-[var(--text-muted)] hover:text-[var(--foreground)] bg-transparent'
-            }`}
-          >
+          <button onClick={() => setActiveTab('usoulimpou')} className={tabClass('usoulimpou')}>
             IA UsouLimpou
           </button>
+          <button onClick={() => setActiveTab('treinamento')} className={tabClass('treinamento')}>
+            Treinamento
+          </button>
+          <Link
+            href="/treinamento/hm"
+            className="px-4 py-1.5 rounded-md text-sm font-medium text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--active-tab-bg)] transition-all duration-200"
+          >
+            Treinamento HM
+          </Link>
+          <Link
+            href="/treinamento/bm"
+            className="px-4 py-1.5 rounded-md text-sm font-medium text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--active-tab-bg)] transition-all duration-200"
+          >
+            Treinamento BM
+          </Link>
+          <Link
+            href="/chat/bluemilk"
+            className="px-4 py-1.5 rounded-md text-sm font-medium text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--active-tab-bg)] transition-all duration-200"
+          >
+            Chat BlueMilk
+          </Link>
+          <Link
+            href="/chat/usoulimpou"
+            className="px-4 py-1.5 rounded-md text-sm font-medium text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--active-tab-bg)] transition-all duration-200"
+          >
+            Chat UsouLimpou
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -79,9 +95,10 @@ export default function Home() {
         >
           <div className="w-full h-full bg-[var(--card-bg)] overflow-hidden">
             <iframe
-              src="https://app.gptmaker.ai/widget/3ED9B41F212FF3B0AB29EE45785CCB51/iframe"
+              src={CHAT_CONFIG.bluemilk.iframeSrc}
               allow="microphone;"
-            ></iframe>
+              title={CHAT_CONFIG.bluemilk.label}
+            />
           </div>
         </section>
 
@@ -92,10 +109,19 @@ export default function Home() {
         >
           <div className="w-full h-full bg-[var(--card-bg)] overflow-hidden">
             <iframe
-              src="https://app.gptmaker.ai/widget/3ED9B439BC19B10D4A241AC4C59CD28F/iframe"
+              src={CHAT_CONFIG.usoulimpou.iframeSrc}
               allow="microphone;"
-            ></iframe>
+              title={CHAT_CONFIG.usoulimpou.label}
+            />
           </div>
+        </section>
+
+        {/* Tela 4: Treinamento */}
+        <section
+          id="treinamento"
+          className={`tab-content ${activeTab === 'treinamento' ? 'active' : ''}`}
+        >
+          <TreinamentoTab />
         </section>
       </main>
     </>
