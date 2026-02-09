@@ -168,7 +168,7 @@ export default function TreinamentoTab({ lockedAgent }: Props) {
     : 'Cole ou digite o texto do treinamento...';
 
   return (
-    <div className="p-5 overflow-auto h-full">
+    <div className="p-4 sm:p-5 overflow-auto flex-1 min-h-0">
       <div className="max-w-4xl mx-auto space-y-6">
         <h2 className="text-2xl font-bold">
           Treinamento{isLocked ? ` ${AGENT_LABELS[effectiveAgent]}` : ''}

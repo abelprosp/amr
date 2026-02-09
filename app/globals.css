@@ -8,6 +8,8 @@
   --accent-color: #1a1a1a;
   --active-tab-bg: #222222;
   --border-color: #333;
+  /* viewport dinâmico para mobile (evita barra de endereço cortando) */
+  --vh: 1vh;
 }
 
 @theme inline {
@@ -17,26 +19,37 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  height: 100vh;
+  min-height: 100%;
+  height: 100dvh; /* viewport dinâmico – evita corte no mobile */
+  max-height: 100vh; /* fallback navegadores antigos */
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Utilitários personalizados se necessário */
+/* Utilitários personalizados */
 .tab-content {
   display: none;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   width: 100%;
+  overflow: hidden;
   animation: fadeIn 0.3s ease;
 }
 
 .tab-content.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes fadeIn {
@@ -48,4 +61,21 @@ iframe {
   border: none;
   width: 100%;
   height: 100%;
+  min-height: 0;
+}
+
+/* Nav horizontal scroll – barra fina no mobile */
+.nav-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.nav-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.nav-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nav-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
 }
