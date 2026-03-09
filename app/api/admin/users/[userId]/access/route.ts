@@ -21,7 +21,10 @@ export async function PUT(
 
   const { userId } = await context.params;
   const body = await request.json();
-  const ia_slugs = Array.isArray(body.ia_slugs) ? body.ia_slugs.filter((s: string) => IA_SLUGS.includes(s)) : [];
+  const slugsSet = new Set(IA_SLUGS as readonly string[]);
+  const ia_slugs = Array.isArray(body.ia_slugs)
+    ? (body.ia_slugs as string[]).filter((s) => typeof s === 'string' && slugsSet.has(s))
+    : [];
 
   const admin = createAdminClient();
   await admin.from('user_ia_access').delete().eq('user_id', userId);
