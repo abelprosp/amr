@@ -21,7 +21,9 @@
 
 html {
   height: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  max-width: 100vw;
 }
 
 body {
@@ -29,11 +31,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   min-height: 100%;
-  height: 100dvh; /* viewport dinâmico – evita corte no mobile */
-  max-height: 100vh; /* fallback navegadores antigos */
+  height: 100dvh;
+  max-height: 100vh;
+  max-width: 100vw;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -42,7 +46,9 @@ body {
   display: none;
   flex: 1;
   min-height: 0;
+  min-width: 0;
   width: 100%;
+  max-width: 100%;
   overflow: hidden;
   animation: fadeIn 0.3s ease;
 }
@@ -60,8 +66,10 @@ body {
 iframe {
   border: none;
   width: 100%;
+  max-width: 100%;
   height: 100%;
   min-height: 0;
+  min-width: 0;
 }
 
 /* Nav horizontal scroll – barra fina no mobile */

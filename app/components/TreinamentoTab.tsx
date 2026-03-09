@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 
 type AgentKind = 'hm' | 'bm';
@@ -48,11 +48,16 @@ export default function TreinamentoTab({ lockedAgent }: Props) {
   const [formType, setFormType] = useState<TrainingType>('TEXT');
   const [formText, setFormText] = useState('');
   const [formImage, setFormImage] = useState('');
-  const [formCallbackUrl, setFormCallbackUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [editImage, setEditImage] = useState('');
+  const [askMessage, setAskMessage] = useState('');
+  const [askAnswer, setAskAnswer] = useState<string | null>(null);
+  const [askLoading, setAskLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const docInputRef = useRef<HTMLInputElement>(null);
+  const imgInputRef = useRef<HTMLInputElement>(null);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -85,7 +90,6 @@ export default function TreinamentoTab({ lockedAgent }: Props) {
         text: formText.trim() || '',
       };
       if (formImage.trim()) payload.image = formImage.trim();
-      if (formCallbackUrl.trim()) payload.callbackUrl = formCallbackUrl.trim();
       const res = await fetch('/api/trainings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,7 +99,6 @@ export default function TreinamentoTab({ lockedAgent }: Props) {
       if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`);
       setFormText('');
       setFormImage('');
-      setFormCallbackUrl('');
       await fetchList();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao criar');
@@ -112,6 +115,7 @@ export default function TreinamentoTab({ lockedAgent }: Props) {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          agent: effectiveAgent,
           type: 'TEXT',
           text: editText.trim() || '',
           ...(editImage.trim() && { image: editImage.trim() }),
@@ -135,7 +139,7 @@ export default function TreinamentoTab({ lockedAgent }: Props) {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`/api/trainings/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/trainings/${id}?agent=${encodeURIComponent(effectiveAgent)}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`);
       await fetchList();
@@ -158,6 +162,78 @@ export default function TreinamentoTab({ lockedAgent }: Props) {
     setEditImage('');
   };
 
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const form = new FormData();
+      form.set('file', file);
+      form.set('agent', effectiveAgent);
+      const res = await fetch('/api/upload', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? 'Falha no upload');
+      setFormType('DOCUMENT');
+      if (data.extractedText) {
+        setFormText(data.extractedText);
+        setFormImage(data.url ?? '');
+      } else {
+        setFormText(data.url ?? '');
+      }
+      docInputRef.current?.form?.reset();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro no upload');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const form = new FormData();
+      form.set('file', file);
+      form.set('agent', effectiveAgent);
+      const res = await fetch('/api/upload', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? 'Falha no upload');
+      setFormImage(data.url ?? '');
+      imgInputRef.current?.form?.reset();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro no upload');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleAsk = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!askMessage.trim()) return;
+    setAskLoading(true);
+    setAskAnswer(null);
+    setError(null);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent: effectiveAgent, message: askMessage.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`);
+      setAskAnswer(data.answer ?? '');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao perguntar');
+    } finally {
+      setAskLoading(false);
+    }
+  };
+
   const isUrlType = formType !== 'TEXT';
   const placeholder = isUrlType
     ? formType === 'WEBSITE'
@@ -168,8 +244,8 @@ export default function TreinamentoTab({ lockedAgent }: Props) {
     : 'Cole ou digite o texto do treinamento...';
 
   return (
-    <div className="p-4 sm:p-5 overflow-auto flex-1 min-h-0">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="p-4 sm:p-5 overflow-x-hidden overflow-y-auto flex-1 min-h-0 w-full max-w-full min-w-0">
+      <div className="max-w-4xl w-full min-w-0 mx-auto space-y-6">
         <h2 className="text-2xl font-bold">
           Treinamento{isLocked ? ` ${AGENT_LABELS[effectiveAgent]}` : ''}
         </h2>
@@ -234,6 +310,23 @@ export default function TreinamentoTab({ lockedAgent }: Props) {
           </div>
           <div>
             <label className="block text-sm text-[var(--text-muted)] mb-1">
+              Documento (upload)
+            </label>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={docInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,.txt,image/*"
+                onChange={handleDocumentUpload}
+                disabled={uploading}
+                className="text-sm text-[var(--text-muted)] file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-[var(--active-tab-bg)] file:text-[var(--foreground)] file:text-sm"
+              />
+              {uploading && <span className="text-xs text-[var(--text-muted)]">Enviando…</span>}
+            </div>
+            <p className="text-xs text-[var(--text-muted)] mt-1">PDF, Word, texto ou imagem. Máx. 15 MB. Em PDFs o texto é extraído automaticamente para o chat usar.</p>
+          </div>
+          <div>
+            <label className="block text-sm text-[var(--text-muted)] mb-1">
               {isUrlType ? 'URL' : 'Texto'}
             </label>
             {isUrlType ? (
@@ -256,31 +349,30 @@ export default function TreinamentoTab({ lockedAgent }: Props) {
           </div>
           <div>
             <label className="block text-sm text-[var(--text-muted)] mb-1">
-              Imagem (URL, opcional)
+              Imagem (URL ou upload)
             </label>
             <input
               type="url"
               value={formImage}
               onChange={(e) => setFormImage(e.target.value)}
-              placeholder="https://..."
-              className="w-full bg-[#0f0f0f] border border-[var(--border-color)] rounded-md px-3 py-2 text-sm"
+              placeholder="https://... ou envie uma foto abaixo"
+              className="w-full bg-[#0f0f0f] border border-[var(--border-color)] rounded-md px-3 py-2 text-sm mb-2"
             />
-          </div>
-          <div>
-            <label className="block text-sm text-[var(--text-muted)] mb-1">
-              Webhook (opcional)
-            </label>
-            <input
-              type="url"
-              value={formCallbackUrl}
-              onChange={(e) => setFormCallbackUrl(e.target.value)}
-              placeholder="https://..."
-              className="w-full bg-[#0f0f0f] border border-[var(--border-color)] rounded-md px-3 py-2 text-sm"
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={imgInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={uploading}
+                className="text-sm text-[var(--text-muted)] file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-[var(--active-tab-bg)] file:text-[var(--foreground)] file:text-sm"
+              />
+              {uploading && <span className="text-xs text-[var(--text-muted)]">Enviando…</span>}
+            </div>
           </div>
           <button
             type="submit"
-            disabled={submitting || !formText.trim()}
+            disabled={submitting || (!formText.trim() && !formImage.trim())}
             className="px-4 py-2 rounded-md bg-[var(--active-tab-bg)] border border-[var(--border-color)] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a2a2a]"
           >
             {submitting ? 'Enviando…' : 'Criar treinamento'}
@@ -382,6 +474,40 @@ export default function TreinamentoTab({ lockedAgent }: Props) {
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+
+        <div className="rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--border-color)] font-semibold flex items-center gap-2">
+            <i className="fa-solid fa-comments text-[var(--text-muted)]"></i>
+            Modo treinamento integrado (ChatGPT)
+          </div>
+          <p className="px-4 pt-3 text-xs text-[var(--text-muted)]">
+            Pergunte algo e a resposta usará o conteúdo dos treinamentos acima como contexto.
+          </p>
+          <form onSubmit={handleAsk} className="p-4 space-y-3">
+            <textarea
+              value={askMessage}
+              onChange={(e) => setAskMessage(e.target.value)}
+              placeholder="Digite sua pergunta..."
+              rows={2}
+              className="w-full bg-[#0f0f0f] border border-[var(--border-color)] rounded-md px-3 py-2 text-sm resize-y"
+              disabled={askLoading}
+            />
+            <button
+              type="submit"
+              disabled={askLoading || !askMessage.trim()}
+              className="px-4 py-2 rounded-md bg-[var(--active-tab-bg)] border border-[var(--border-color)] text-sm font-medium disabled:opacity-50"
+            >
+              {askLoading ? 'Pensando…' : 'Perguntar'}
+            </button>
+          </form>
+          {askAnswer !== null && (
+            <div className="px-4 pb-4">
+              <div className="p-3 rounded-md bg-[#0f0f0f] border border-[var(--border-color)] text-sm whitespace-pre-wrap">
+                {askAnswer}
+              </div>
+            </div>
           )}
         </div>
       </div>

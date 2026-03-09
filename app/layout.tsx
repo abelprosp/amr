@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { getProfile } from "./lib/auth/get-profile";
+import { AuthProvider } from "./components/AuthProvider";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -23,11 +25,12 @@ export const metadata: Metadata = {
   description: "Painel de Inteligência Artificial Integrado",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const profile = await getProfile();
   return (
     <html lang="pt-BR">
       <head>
@@ -36,9 +39,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-0`}
       >
-        <div className="flex flex-col flex-1 min-h-0 w-full overflow-hidden">
-          {children}
-        </div>
+        <AuthProvider initialProfile={profile}>
+          <div className="flex flex-col flex-1 min-h-0 w-full max-w-full overflow-x-hidden overflow-y-hidden">
+            {children}
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

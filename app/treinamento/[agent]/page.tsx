@@ -1,11 +1,13 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import TreinamentoTab, { AGENT_LABELS } from '@/app/components/TreinamentoTab';
+import { getProfile } from '@/app/lib/auth/get-profile';
 
 type Agent = 'hm' | 'bm';
 
 const VALID_AGENTS: Agent[] = ['hm', 'bm'];
+const AGENT_TO_SLUG: Record<Agent, string> = { hm: 'treinamento_hm', bm: 'treinamento_bm' };
 
 export async function generateMetadata({
   params,
@@ -24,11 +26,16 @@ export default async function TreinamentoAgentPage({
 }) {
   const { agent } = await params;
   if (!VALID_AGENTS.includes(agent as Agent)) notFound();
+  const profile = await getProfile();
+  if (!profile) redirect('/login');
+  const requiredSlug = AGENT_TO_SLUG[agent as Agent];
+  const hasAccess = profile.role === 'admin' || profile.ia_slugs.includes(requiredSlug);
+  if (!hasAccess) redirect('/');
   const label = AGENT_LABELS[agent as Agent];
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden w-full">
-      <header className="flex justify-between items-center gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-3 bg-[var(--background)] border-b border-[var(--border-color)] shrink-0 min-h-[52px] sm:min-h-[60px]">
+    <div className="flex flex-col flex-1 min-h-0 overflow-x-hidden overflow-y-hidden w-full max-w-full min-w-0">
+      <header className="flex justify-between items-center gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-3 bg-[var(--background)] border-b border-[var(--border-color)] shrink-0 min-h-[52px] sm:min-h-[60px] w-full max-w-full min-w-0 overflow-x-hidden">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <Link
             href="/"

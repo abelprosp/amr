@@ -1,11 +1,13 @@
+export type AgentKind = 'hm' | 'bm';
+
 export const CHAT_CONFIG = {
   bluemilk: {
-    label: 'IA BlueMilk',
-    iframeSrc: 'https://app.gptmaker.ai/widget/3ED9B41F212FF3B0AB29EE45785CCB51/iframe',
+    label: 'Chat BlueMilk',
+    agent: 'hm' as AgentKind,
   },
   usoulimpou: {
-    label: 'IA UsouLimpou',
-    iframeSrc: 'https://app.gptmaker.ai/widget/3ED9B439BC19B10D4A241AC4C59CD28F/iframe',
+    label: 'Chat UsouLimpou',
+    agent: 'hm' as AgentKind,
   },
 } as const;
 
