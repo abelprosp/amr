@@ -12,7 +12,9 @@ type UserRow = {
   ia_slugs: string[];
 };
 
-export default function AdminClient() {
+type Props = { embedded?: boolean };
+
+export default function AdminClient({ embedded }: Props) {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,17 +101,19 @@ export default function AdminClient() {
   };
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full max-w-full overflow-x-hidden overflow-y-auto p-4 sm:p-6">
+    <div className={`flex flex-col w-full max-w-full overflow-x-hidden p-4 sm:p-6 ${embedded ? 'min-h-0' : 'flex-1 min-h-0 overflow-y-auto'}`}>
       <div className="max-w-3xl mx-auto w-full space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold">Administração – Usuários</h1>
-          <Link
-            href="/"
-            className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--border-color)]"
-          >
-            <i className="fa-solid fa-arrow-left"></i> Voltar
-          </Link>
-        </div>
+        {!embedded && (
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold">Administração – Usuários</h1>
+            <Link
+              href="/"
+              className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--border-color)]"
+            >
+              <i className="fa-solid fa-arrow-left"></i> Voltar
+            </Link>
+          </div>
+        )}
 
         {error && (
           <div className="p-3 rounded-lg bg-red-950/50 border border-red-800 text-red-200 text-sm">

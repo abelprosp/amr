@@ -7,18 +7,16 @@ const DEFAULT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini';
 
 export type TrainingContext = { type: string; text: string; image?: string | null }[];
 
-const SYSTEM_RULES = `Regras obrigatórias:
-- Para cumprimentos, agradecimentos ou despedidas (ex.: "olá", "oi", "obrigado", "tchau"), responda de forma breve e natural, sem exigir isso do material.
-- Para qualquer PERGUNTA ou pedido de INFORMAÇÃO/CONTEÚDO, responda SOMENTE com base no material de treinamento abaixo. Não use conhecimento externo.
-- Se a pergunta não puder ser respondida com o material, responda apenas: "Essa informação não consta no meu treinamento."
-- Não invente, não deduza e não complemente com informações de fora do material.`;
+const SYSTEM_BASE = `Você é um assistente prestativo (ChatGPT). Responda de forma clara e objetiva.
+Quando o usuário perguntar sobre produtos, procedimentos ou temas que possam estar no material de treinamento abaixo, CONSULTE esse material e use-o para enriquecer ou basear sua resposta. Dê prioridade às informações do treinamento quando forem relevantes para a pergunta.
+Quando a pergunta for geral, cumprimentos ou não estiver coberta pelo material, responda normalmente com seu conhecimento.`;
 
 function getSystemMessage(context: TrainingContext): string {
   if (context.length === 0) {
-    return `${SYSTEM_RULES}\n\nNão há material de treinamento disponível. Diga ao usuário que não há conteúdo treinado para consultar e que ele deve adicionar treinamentos primeiro.`;
+    return SYSTEM_BASE;
   }
   const parts = context.map((t) => (t.text?.trim() ? `[${t.type}]\n${t.text}` : '')).filter(Boolean);
-  return `${SYSTEM_RULES}\n\n--- Material de treinamento (use APENAS isto para responder) ---\n\n${parts.join('\n\n---\n\n')}`;
+  return `${SYSTEM_BASE}\n\n--- Material de treinamento (consulte para perguntas relacionadas) ---\n\n${parts.join('\n\n---\n\n')}`;
 }
 
 export async function chatWithContext(

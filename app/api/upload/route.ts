@@ -24,7 +24,16 @@ async function extractPdfTextFromBuffer(buffer: ArrayBuffer): Promise<string | n
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    let supabase;
+    try {
+      supabase = await createClient();
+    } catch (e) {
+      console.error('[upload] createClient failed', e);
+      return NextResponse.json(
+        { error: 'Erro ao verificar autenticação. Tente fazer login novamente.' },
+        { status: 500 }
+      );
+    }
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -45,19 +54,44 @@ export async function POST(request: NextRequest) {
 
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
     const path = `${agentVal}/${Date.now()}-${safeName}`;
-    const buffer = await file.arrayBuffer();
-    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-    const extractedText = isPdf ? await extractPdfTextFromBuffer(buffer) : null;
+    let buffer: ArrayBuffer;
+    try {
+      buffer = await file.arrayBuffer();
+    } catch (e) {
+      console.error('[upload] arrayBuffer failed', e);
+      return NextResponse.json(
+        { error: 'Arquivo muito grande ou inválido. Limite: ' + MAX_SIZE_MB + ' MB.' },
+        { status: 400 }
+      );
+    }
 
-    const admin = createAdminClient();
-    const { data, error } = await admin.storage.from(BUCKET).upload(path, new Uint8Array(buffer), {
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    // Usar cópia do buffer na extração para não invalidar (detach) o buffer usado no upload
+    const extractedText = isPdf ? await extractPdfTextFromBuffer(buffer.slice(0)) : null;
+
+    let admin;
+    try {
+      admin = createAdminClient();
+    } catch (e) {
+      console.error('[upload] createAdminClient failed', e);
+      return NextResponse.json(
+        { error: 'Configuração do servidor incompleta (Supabase). Contate o administrador.' },
+        { status: 500 }
+      );
+    }
+
+    const bytesForUpload = new Uint8Array(buffer);
+    const { data, error } = await admin.storage.from(BUCKET).upload(path, bytesForUpload, {
       contentType: file.type || undefined,
       upsert: false,
     });
     if (error) {
-      console.error('[upload]', error);
+      console.error('[upload] storage error', error);
+      const hint = error.message?.toLowerCase().includes('bucket')
+        ? ' Crie o bucket "trainings" no Supabase (Storage > New bucket > nome: trainings, público).'
+        : '';
       return NextResponse.json(
-        { error: error.message || 'Falha no upload. Crie o bucket "trainings" no Supabase (Storage, público).' },
+        { error: (error.message || 'Falha no upload.') + hint },
         { status: 500 }
       );
     }

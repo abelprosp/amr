@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import TreinamentoTab, { AGENT_LABELS } from '@/app/components/TreinamentoTab';
@@ -16,7 +17,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { agent } = await params;
   if (!VALID_AGENTS.includes(agent as Agent)) return { title: 'Treinamento' };
-  return { title: `Treinamento ${AGENT_LABELS[agent as Agent]} | IA Visor Integrado` };
+  return { title: `Treinamento ${AGENT_LABELS[agent as Agent]} | IA da Redobrai` };
 }
 
 export default async function TreinamentoAgentPage({
@@ -37,12 +38,8 @@ export default async function TreinamentoAgentPage({
     <div className="flex flex-col flex-1 min-h-0 overflow-x-hidden overflow-y-hidden w-full max-w-full min-w-0">
       <header className="flex justify-between items-center gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-3 bg-[var(--background)] border-b border-[var(--border-color)] shrink-0 min-h-[52px] sm:min-h-[60px] w-full max-w-full min-w-0 overflow-x-hidden">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <Link
-            href="/"
-            className="flex items-center gap-2 font-semibold text-[0.85rem] sm:text-[0.95rem] hover:opacity-80 shrink-0"
-          >
-            <i className="fa-solid fa-brain"></i>
-            <span className="truncate">IA Visor Integrado</span>
+          <Link href="/" className="shrink-0 flex items-center hover:opacity-80" aria-label="Início">
+            <Image src="/logo.jpg" alt="" width={120} height={32} className="h-7 w-auto object-contain" />
           </Link>
           <span className="text-[var(--text-muted)] shrink-0">/</span>
           <span className="font-medium truncate">Treinamento {label}</span>

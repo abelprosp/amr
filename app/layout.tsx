@@ -21,8 +21,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IA Visor Integrado",
-  description: "Painel de Inteligência Artificial Integrado",
+  title: "IA da Redobrai",
+  description: "Painel de Inteligência Artificial da Redobrai",
 };
 
 export default async function RootLayout({

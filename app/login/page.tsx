@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { createClient } from '@/app/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -40,9 +41,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-[var(--background)] p-4">
       <div className="w-full max-w-sm rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] p-6">
-        <div className="mb-6 flex items-center gap-2 font-semibold">
-          <i className="fa-solid fa-brain text-xl"></i>
-          <span>IA Visor Integrado</span>
+        <div className="mb-6 flex justify-center">
+          <Image src="/logo.jpg" alt="" width={180} height={48} className="h-12 w-auto object-contain" />
         </div>
         <h1 className="text-xl font-bold mb-4">Entrar</h1>
         {searchParams.get('error') === 'auth' && (

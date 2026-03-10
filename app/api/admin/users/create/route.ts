@@ -19,7 +19,10 @@ export async function POST(request: Request) {
   const body = await request.json();
   const email = typeof body.email === 'string' ? body.email.trim() : '';
   const password = typeof body.password === 'string' ? body.password : '';
-  const ia_slugs = Array.isArray(body.ia_slugs) ? body.ia_slugs.filter((s: string) => IA_SLUGS.includes(s)) : [];
+  const slugsSet = new Set(IA_SLUGS as readonly string[]);
+  const ia_slugs = Array.isArray(body.ia_slugs)
+    ? (body.ia_slugs as string[]).filter((s) => typeof s === 'string' && slugsSet.has(s))
+    : [];
 
   if (!email || !password) {
     return NextResponse.json({ error: 'Email e senha obrigatórios' }, { status: 400 });

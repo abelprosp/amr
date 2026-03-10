@@ -56,6 +56,9 @@ body {
 .tab-content.active {
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 @keyframes fadeIn {

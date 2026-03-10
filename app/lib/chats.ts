@@ -3,11 +3,13 @@ export type AgentKind = 'hm' | 'bm';
 export const CHAT_CONFIG = {
   bluemilk: {
     label: 'Chat BlueMilk',
-    agent: 'hm' as AgentKind,
+    agent: 'bm' as AgentKind,
+    logo: '/bm.png',
   },
   usoulimpou: {
     label: 'Chat UsouLimpou',
     agent: 'hm' as AgentKind,
+    logo: '/hm.png',
   },
 } as const;
 

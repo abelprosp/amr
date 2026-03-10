@@ -4,6 +4,9 @@ import path from "path";
 const nextConfig: NextConfig = {
   turbopack: {},
   transpilePackages: ['unpdf'],
+  experimental: {
+    serverActions: { bodySizeLimit: '16mb' },
+  },
   webpack: (config, { dir }) => {
     config.resolve ??= {};
     config.resolve.modules = [
