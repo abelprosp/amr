@@ -18,12 +18,17 @@ export default function AdminClient({ embedded }: Props) {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [createEmail, setCreateEmail] = useState('');
   const [createPassword, setCreatePassword] = useState('');
   const [createSlugs, setCreateSlugs] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editSlugs, setEditSlugs] = useState<string[]>([]);
+  const [passwordUserId, setPasswordUserId] = useState<string | null>(null);
+  const [passwordUserEmail, setPasswordUserEmail] = useState<string>('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -48,6 +53,7 @@ export default function AdminClient({ embedded }: Props) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    setNotice(null);
     try {
       const res = await fetch('/api/admin/users/create', {
         method: 'POST',
@@ -63,6 +69,7 @@ export default function AdminClient({ embedded }: Props) {
       setCreateEmail('');
       setCreatePassword('');
       setCreateSlugs([]);
+      setNotice('Usuário criado com sucesso.');
       await fetchUsers();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro');
@@ -84,6 +91,7 @@ export default function AdminClient({ embedded }: Props) {
     if (!editingId) return;
     setSubmitting(true);
     setError(null);
+    setNotice(null);
     try {
       const res = await fetch(`/api/admin/users/${editingId}/access`, {
         method: 'PUT',
@@ -92,11 +100,52 @@ export default function AdminClient({ embedded }: Props) {
       });
       if (!res.ok) throw new Error('Erro ao salvar');
       setEditingId(null);
+      setNotice('Acessos atualizados com sucesso.');
       await fetchUsers();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const openPasswordModal = (u: UserRow) => {
+    setPasswordUserId(u.id);
+    setPasswordUserEmail(u.email || u.id);
+    setNewPassword('');
+    setError(null);
+    setNotice(null);
+  };
+
+  const closePasswordModal = () => {
+    setPasswordUserId(null);
+    setPasswordUserEmail('');
+    setNewPassword('');
+  };
+
+  const savePassword = async () => {
+    if (!passwordUserId) return;
+    if (newPassword.length < 6) {
+      setError('A nova senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+    setPasswordSubmitting(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch(`/api/admin/users/${passwordUserId}/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao atualizar senha');
+      closePasswordModal();
+      setNotice('Senha atualizada com sucesso.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao atualizar senha');
+    } finally {
+      setPasswordSubmitting(false);
     }
   };
 
@@ -118,6 +167,11 @@ export default function AdminClient({ embedded }: Props) {
         {error && (
           <div className="p-3 rounded-lg bg-red-950/50 border border-red-800 text-red-200 text-sm">
             {error}
+          </div>
+        )}
+        {notice && (
+          <div className="p-3 rounded-lg bg-green-950/50 border border-green-800 text-green-200 text-sm">
+            {notice}
           </div>
         )}
 
@@ -185,15 +239,24 @@ export default function AdminClient({ embedded }: Props) {
                       {u.role === 'admin' ? 'Admin (acesso total)' : `IAs: ${u.ia_slugs.length ? u.ia_slugs.map((s) => IA_LABELS[s as keyof typeof IA_LABELS] ?? s).join(', ') : 'nenhuma'}`}
                     </p>
                   </div>
-                  {u.role !== 'admin' && (
+                  <div className="flex items-center gap-2">
+                    {u.role !== 'admin' && (
+                      <button
+                        type="button"
+                        onClick={() => openEdit(u)}
+                        className="text-sm px-3 py-1.5 rounded-md border border-[var(--border-color)] hover:bg-[var(--accent-color)]"
+                      >
+                        Editar acessos
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => openEdit(u)}
+                      onClick={() => openPasswordModal(u)}
                       className="text-sm px-3 py-1.5 rounded-md border border-[var(--border-color)] hover:bg-[var(--accent-color)]"
                     >
-                      Editar acessos
+                      Trocar senha
                     </button>
-                  )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -233,6 +296,43 @@ export default function AdminClient({ embedded }: Props) {
                 className="px-3 py-1.5 rounded-md bg-[var(--active-tab-bg)] border border-[var(--border-color)] text-sm disabled:opacity-50"
               >
                 Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {passwordUserId && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-10">
+          <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg p-6 max-w-md w-full space-y-4">
+            <h3 className="font-semibold">Trocar senha</h3>
+            <p className="text-sm text-[var(--text-muted)] break-all">{passwordUserEmail}</p>
+            <div>
+              <label className="block text-sm text-[var(--text-muted)] mb-1">Nova senha</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                minLength={6}
+                placeholder="Mínimo 6 caracteres"
+                className="w-full bg-[#0f0f0f] border border-[var(--border-color)] rounded-md px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={closePasswordModal}
+                className="px-3 py-1.5 rounded-md border border-[var(--border-color)] text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={savePassword}
+                disabled={passwordSubmitting}
+                className="px-3 py-1.5 rounded-md bg-[var(--active-tab-bg)] border border-[var(--border-color)] text-sm disabled:opacity-50"
+              >
+                {passwordSubmitting ? 'Salvando…' : 'Salvar senha'}
               </button>
             </div>
           </div>
